@@ -78,3 +78,28 @@ export const LinkMutation = extendType({  // 1
     });
   },
 });
+
+export const LinkDeletion = extendType({  // 1
+  type: "Mutation",
+  definition(t) {
+    t.field("delete", {  // 2
+      type: "Link",
+      args: {   // 3
+        id: nonNull(intArg())
+      },
+
+      resolve(parent, args, context) {
+        const { id } = args;  // 4
+        const linkIndex = links.findIndex(obj => obj.id === id) || null
+        let link = null
+
+        if(linkIndex) {
+          link = links[linkIndex]
+          links.splice(linkIndex, 1)
+        }
+
+        return link;
+      },
+    });
+  },
+});
