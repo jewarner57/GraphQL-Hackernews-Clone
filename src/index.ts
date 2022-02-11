@@ -1,10 +1,13 @@
-import { makeSchema } from 'nexus'
-import { join } from 'path'
+import { ApolloServer } from "apollo-server";
 
-export const schema = makeSchema({
-  types: [],
-  outputs: {
-    schema: join(__dirname, '..', 'schema.graphql'),
-    typegen: join(__dirname, '..', 'nexus-typegen.ts'),
-  },
-})
+// 1
+import { schema } from "../schema";
+export const server = new ApolloServer({
+  schema,
+});
+
+const port = 3000;
+// 2
+server.listen({ port }).then(({ url }) => {
+  console.log(`🚀  Server ready at ${url}`);
+});
