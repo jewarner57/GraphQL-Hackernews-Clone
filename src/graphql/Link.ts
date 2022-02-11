@@ -1,35 +1,22 @@
 import { NexusGenObjects } from "../../nexus-typegen";  
-import { extendType, intArg, nonNull, objectType, stringArg } from "nexus";   
+import { arg, extendType, intArg, nonNull, objectType, stringArg } from "nexus";   
 
 export const Link = objectType({
-  name: "Link", // 1 
-  definition(t) {  // 2
-    t.nonNull.int("id"); // 3 
-    t.nonNull.string("description"); // 4
-    t.nonNull.string("url"); // 5 
+  name: "Link", 
+  definition(t) { 
+    t.nonNull.int("id"); 
+    t.nonNull.string("description");
+    t.nonNull.string("url"); 
   },
 });
 
-let links: NexusGenObjects["Link"][] = [   // 1
-  {
-    id: 1,
-    url: "www.howtographql.com",
-    description: "Fullstack tutorial for GraphQL",
-  },
-  {
-    id: 2,
-    url: "graphql.org",
-    description: "GraphQL official website",
-  },
-];
-
-export const LinkQuery = extendType({  // 2
+export const LinkQuery = extendType({
   type: "Query",
   definition(t) {
-    t.nonNull.list.nonNull.field("feed", {   // 3
+    t.nonNull.list.nonNull.field("feed", {
       type: "Link",
-      resolve(parent, args, context, info) {    // 4
-        return links;
+      resolve(parent, args, context) {
+        return context.prisma.link.findMany();
       },
     });
   },
@@ -44,95 +31,86 @@ export const LinkIdQuery = extendType({
         id: nonNull(intArg())
       },
       resolve(parent, args, context, info) {
-        const {id} = args
-        const link = links.find(obj => obj.id === id) || null
+        const { id } = args
 
-        return link;
+        return context.prisma.link.findUnique({
+          where: {
+            id: id
+          }
+        })
       },
     });
   },
 });
 
-export const LinkMutation = extendType({  // 1
+export const LinkMutation = extendType({
   type: "Mutation",
   definition(t) {
-    t.nonNull.field("post", {  // 2
+    t.nonNull.field("post", {
       type: "Link",
-      args: {   // 3
+      args: {
         description: nonNull(stringArg()),
         url: nonNull(stringArg()),
       },
-
       resolve(parent, args, context) {
-        const { description, url } = args;  // 4
-
-        let idCount = links.length + 1;  // 5
-        const link = {
-          id: idCount,
-          description: description,
-          url: url,
-        };
-        links.push(link);
-        return link;
+        const newLink = context.prisma.link.create({
+          data: {
+            description: args.description,
+            url: args.url,
+          },
+        });
+        return newLink;
       },
     });
   },
 });
 
-export const LinkDeletion = extendType({  // 1
+export const LinkDeletion = extendType({
   type: "Mutation",
   definition(t) {
-    t.field("delete", {  // 2
+    t.field("delete", {
       type: "Link",
-      args: {   // 3
+      args: {
         id: nonNull(intArg())
       },
 
       resolve(parent, args, context) {
-        const { id } = args;  // 4
-        const linkIndex = links.findIndex(obj => obj.id === id)
+        const { id } = args;
 
-        if(linkIndex === -1) {
-          return null;
-        }
-
-        const link = links[linkIndex]
-        links.splice(linkIndex, 1)
-        return link
+        return context.prisma.link.delete({
+          where: {
+            id: id,
+          },
+        })
       },
     });
   },
 });
 
-export const LinkUpdate = extendType({  // 1
+export const LinkUpdate = extendType({
   type: "Mutation",
   definition(t) {
-    t.field("update", {  // 2
+    t.field("update", {
       type: "Link",
-      args: {   // 3
+      args: {
         id: nonNull(intArg()),
         description: stringArg(),
         url: stringArg(),
       },
 
       resolve(parent, args, context) {
-        const { id, description, url } = args;  // 4
-        const linkIndex = links.findIndex(obj => obj.id === id)
-
-        if (linkIndex == -1) {
-          return null;
+        const { id, description, url } = args;
+        const data = {
+          url: (url? url : undefined),
+          description: (description? description : undefined)
         }
 
-        const link = links[linkIndex]
-        const updatedLink = {
-          id: id,
-          url: url || link.url,
-          description: description || link.description
-        }
-
-        links[linkIndex] = updatedLink
-
-        return links[linkIndex]
+        return context.prisma.link.update({
+          where: {
+            id: id,
+          },
+          data: data
+        })
       },
     });
   },
