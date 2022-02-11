@@ -90,15 +90,49 @@ export const LinkDeletion = extendType({  // 1
 
       resolve(parent, args, context) {
         const { id } = args;  // 4
-        const linkIndex = links.findIndex(obj => obj.id === id) || null
-        let link = null
+        const linkIndex = links.findIndex(obj => obj.id === id)
 
-        if(linkIndex) {
-          link = links[linkIndex]
-          links.splice(linkIndex, 1)
+        if(linkIndex === -1) {
+          return null;
         }
 
-        return link;
+        const link = links[linkIndex]
+        links.splice(linkIndex, 1)
+        return link
+      },
+    });
+  },
+});
+
+export const LinkUpdate = extendType({  // 1
+  type: "Mutation",
+  definition(t) {
+    t.field("update", {  // 2
+      type: "Link",
+      args: {   // 3
+        id: nonNull(intArg()),
+        description: stringArg(),
+        url: stringArg(),
+      },
+
+      resolve(parent, args, context) {
+        const { id, description, url } = args;  // 4
+        const linkIndex = links.findIndex(obj => obj.id === id)
+
+        if (linkIndex == -1) {
+          return null;
+        }
+
+        const link = links[linkIndex]
+        const updatedLink = {
+          id: id,
+          url: url || link.url,
+          description: description || link.description
+        }
+
+        links[linkIndex] = updatedLink
+
+        return links[linkIndex]
       },
     });
   },
