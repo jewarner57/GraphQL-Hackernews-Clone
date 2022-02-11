@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "ES2018",
     "module": "commonjs",
-    "allowJs": true,
     "lib": [
       "esnext"
     ],
